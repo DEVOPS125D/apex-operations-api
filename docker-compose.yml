@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: redis:alpine
+    container_name: apex-redis-db
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - apex-net
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: apex-operations-api:${APP_VERSION:-v1.0.0}
+    container_name: apex-api-service
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    networks:
+      - apex-net
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  apex-net:
+    driver: bridge

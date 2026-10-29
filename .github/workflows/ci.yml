@@ -1,0 +1,65 @@
+name: Continuous Integration & Security Gate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-lint:
+    name: Lint, Test Suite & Safety Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Code Quality (Flake8)
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run Core Test Suite (5 Checks)
+        run: |
+          pytest tests/test_api.py -v
+
+      - name: Test Safety Release Barrier (Intentional Failure Demo)
+        if: ${{ env.TRIGGER_FAIL_TEST == 'true' }}
+        env:
+          BLOCK_RELEASE: "true"
+        run: |
+          pytest tests/test_intentional_failure.py -v
+
+  build-and-verify-security:
+    name: Build Image & Verify Non-Root
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: |
+          docker build -t apex-operations-api:ci-build .
+
+      - name: Verify Container Non-Root User
+        run: |
+          USER_ID=$(docker run --rm apex-operations-api:ci-build id -u)
+          echo "Verified Container User ID: $USER_ID"
+          if [ "$USER_ID" -ne 10001 ]; then
+            echo "FAILED: Container runs with unauthorized UID $USER_ID"
+            exit 1
+          fi
+          echo "SUCCESS: Non-root user 10001 confirmed."
