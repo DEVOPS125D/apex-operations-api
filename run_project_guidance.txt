@@ -1,0 +1,117 @@
+====================================================================
+
+APEX OPERATIONS API - ZERO-ERROR SETUP & EXECUTION GUIDE
+
+====================================================================
+
+
+
+PREREQUISITES:
+
+1. Git installed on your system.
+
+2. Docker Desktop installed and running (Engine Status: Green).
+
+* NOTE: You do NOT need to install Python or Redis locally. Docker downloads and configures everything automatically inside containers.
+
+
+
+--------------------------------------------------------------------
+
+STEP-BY-STEP EXECUTION COMMANDS (RUN IN TERMINAL / POWERSHELL)
+
+--------------------------------------------------------------------
+
+
+
+1. Clone the repository:
+
+   git clone https://github.com/DEVOPS125D/apex-operations-api.git
+
+
+
+2. Navigate into the project folder:
+
+   cd apex-operations-api
+
+
+
+3. Generate the required environment configuration file:
+
+   cp .env.example .env
+
+   (On Windows PowerShell if 'cp' fails: Copy-Item .env.example .env)
+
+
+
+4. Build and start containers in detached mode:
+
+   docker compose up -d --build
+
+
+
+* NOTE: Docker Compose will automatically pull the Redis image, build the multi-stage FastAPI container, and link the internal network.
+
+
+
+--------------------------------------------------------------------
+
+HOW TO ACCESS & VERIFY IN BROWSER
+
+--------------------------------------------------------------------
+
+
+
+Open your web browser and navigate to:
+
+
+
+- Interactive Dashboard (Swagger UI):
+
+  http://localhost:8000/docs
+
+
+
+- Health Check (Liveness Probe):
+
+  http://localhost:8000/health
+
+
+
+- Dependency Readiness Check (Redis Connection):
+
+  http://localhost:8000/ready
+
+
+
+--------------------------------------------------------------------
+
+HOW TO STOP THE APPLICATION
+
+--------------------------------------------------------------------
+
+
+
+- Safely stop running containers:
+
+  docker compose down
+
+
+
+- Stop containers and remove persistent database storage:
+
+  docker compose down -v
+
+
+
+--------------------------------------------------------------------
+
+CRITICAL TROUBLESHOOTING NOTES
+
+--------------------------------------------------------------------
+
+- Note 1: If 'docker compose' fails to connect to the daemon, verify Docker Desktop is open and shows "Engine running" in the bottom-left corner.
+
+- Note 2: Ensure port 8000 is free and not occupied by other local applications.
+
+====================================================================
